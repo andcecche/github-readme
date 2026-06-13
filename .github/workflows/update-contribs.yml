@@ -1,3 +1,6 @@
+- name: PRINT WORKFLOW FILE
+  run: cat .github/workflows/*.yml
+
 name: Update Contribution Art
 
 on:
