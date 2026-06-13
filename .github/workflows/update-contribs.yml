@@ -10,19 +10,19 @@ permissions:
 
 concurrency:
   group: contribution-art
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   generate:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repo
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -31,13 +31,12 @@ jobs:
         env:
           GITHUB_USER: ${{ github.repository_owner }}
           GH_README_TOKEN: ${{ secrets.GH_README_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python generate_contribs.py --out output
 
-      - name: Commit and sync safely
+      - name: Commit & push safely
         run: |
-          echo "RUNNING NEW VERSION"
+          echo "RUNNING FIXED VERSION"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -51,8 +50,11 @@ jobs:
 
           git commit -m "chore: update contribution art"
 
-          # 🔥 SOLUZIONE ROBUSTA: sincronizza PRIMA di push
+          # 🔥 soluzione definitiva: riallinea sempre col remoto
           git fetch origin main
-          git rebase origin/main
+          git reset --hard origin/main
 
-          git push origin main
+          # riapplica commit sopra lo stato remoto
+          git cherry-pick HEAD
+
+          git push origin HEAD:main
