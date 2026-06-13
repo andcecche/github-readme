@@ -8,19 +8,12 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: contribution-art
-  cancel-in-progress: true
-
 jobs:
   generate:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
+      - name: Check out repo
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -32,14 +25,13 @@ jobs:
           GITHUB_USER: ${{ github.repository_owner }}
           GH_README_TOKEN: ${{ secrets.GH_README_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          python generate_contribs.py --out output
+        run: python generate_contribs.py --out output
 
-      - name: Commit & push changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: update contribution art"
-          file_pattern: output/contribs-dark.svg output/contribs-light.svg
-          branch: main
-          commit_user_name: github-actions[bot]
-          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+      - name: Commit updated assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add output/contribs-dark.svg output/contribs-light.svg
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: update contribution art"
+          git push
