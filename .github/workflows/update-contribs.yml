@@ -1,5 +1,9 @@
 name: Update Contribution Art
 
+concurrency:
+  group: contribution-art
+  cancel-in-progress: false
+
 on:
   workflow_dispatch:
   schedule:
@@ -11,11 +15,13 @@ permissions:
 jobs:
   generate:
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out repo
-      - uses: actions/checkout@v4
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -26,14 +32,26 @@ jobs:
           GITHUB_USER: ${{ github.repository_owner }}
           GH_README_TOKEN: ${{ secrets.GH_README_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python generate_contribs.py --out output
+        run: |
+          python generate_contribs.py --out output
 
       - name: Commit updated assets
         run: |
+          echo "NEW WORKFLOW VERSION"
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add output/contribs-dark.svg output/contribs-light.svg
-          git diff --cached --quiet && exit 0
+
+          if git diff --cached --quiet; then
+            echo "No changes detected."
+            exit 0
+          fi
+
           git commit -m "chore: update contribution art"
+
+          git fetch origin main
           git pull --rebase origin main
-          git push origin main
+
+          git push origin HEAD:main
