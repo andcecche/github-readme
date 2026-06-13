@@ -1,9 +1,5 @@
 name: Update Contribution Art
 
-concurrency:
-  group: contribution-art
-  cancel-in-progress: false
-
 on:
   workflow_dispatch:
   schedule:
@@ -11,6 +7,10 @@ on:
 
 permissions:
   contents: write
+
+concurrency:
+  group: contribution-art
+  cancel-in-progress: false
 
 jobs:
   generate:
@@ -35,9 +35,9 @@ jobs:
         run: |
           python generate_contribs.py --out output
 
-      - name: Commit updated assets
+      - name: Commit and sync safely
         run: |
-          echo "NEW WORKFLOW VERSION"
+          echo "RUNNING NEW VERSION"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -45,13 +45,14 @@ jobs:
           git add output/contribs-dark.svg output/contribs-light.svg
 
           if git diff --cached --quiet; then
-            echo "No changes detected."
+            echo "No changes"
             exit 0
           fi
 
           git commit -m "chore: update contribution art"
 
+          # 🔥 SOLUZIONE ROBUSTA: sincronizza PRIMA di push
           git fetch origin main
-          git pull --rebase origin main
+          git rebase origin/main
 
-          git push origin HEAD:main
+          git push origin main
