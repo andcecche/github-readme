@@ -34,4 +34,5 @@ jobs:
           git add output/contribs-dark.svg output/contribs-light.svg
           git diff --cached --quiet && exit 0
           git commit -m "chore: update contribution art"
+          git pull --rebase origin main
           git push
